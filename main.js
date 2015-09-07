@@ -2,6 +2,11 @@
 // Simpler curve for these guys for testing
 // Delta calculation for offline idling
 
+var myInterval = setInterval(tick,0);
+
+
+var lastUpdate = Date.now();
+var delta = 0;
 var rock = 0;
 var rgolem = 0;
 var rwizard = 0;
@@ -43,7 +48,7 @@ function rgolemBuyAll() {
     while (rock >= golemCost) {
         rgolem = rgolem + 1;
         rock = rock - golemCost;
-        rgolemCost = getGolemCost();
+        golemCost = getGolemCost();
     }
     redisplay();
 }
@@ -72,7 +77,8 @@ function save() {
     var save = {
         rock: rock,
         rgolem: rgolem,
-        rwizard: rwizard
+        rwizard: rwizard,
+        lastUpdate: lastUpdate
     }
     localStorage.setItem("caranhaIncSaveGame",JSON.stringify(save));
 }
@@ -84,21 +90,22 @@ function load() {
             rock = savegame.rock;
         else
             rock = 0;
-        console.log("loaded rocks");
         
-        // ERROR, not loading rock golems
         if (typeof savegame.rgolem !== "undefined")
             rgolem = savegame.rgolem;
         else
             rgolem = 0;
-        console.log("loaded golems");
         
         if (typeof savegame.rwizard !== "undefined")
             rwizard = savegame.rwizard;
         else
             rwizard = 0;
-        console.log("loaded wizards");
         
+        if (typeof savegame.lastUpdate !== "undefined")
+            lastUpdate = savegame.lastUpdate;
+        else
+            lastUpdate = Date.now();
+
         console.log(savegame);
     }
     else
@@ -111,16 +118,29 @@ function reset() {
     rock=0;
     rgolem=0;
     rwizard=0;
+    lastUpdate=Date.now()
     redisplay();
 }
 
+function tick() {
+  var now = Date.now()
+  var dt = now - lastUpdate;
+  lastUpdate = now;
+  
+  update(dt);
+}
 
-window.setInterval(function(){
+function update(dt) {
+  delta = delta + dt;
+  while (delta > 1000)
+  {
     rockGet(rgolem);
     golemGet(rwizard);
-    redisplay();
-    save()
-}, 1000);
+    delta = delta - 1000;
+  }
+  redisplay();
+}
+
 
 window.onload = function() {
     // Error, not loading on load
